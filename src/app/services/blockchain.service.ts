@@ -1,31 +1,57 @@
 import { Injectable } from '@angular/core';
 import { MetaMascara, MetaMascaraFactory } from 'mmascara';
-import { tokenAddress, contractAddress } from '../src/addresses';
+import { Subject } from 'rxjs';
+import { IContract } from '../interfaces/contract.interface';
+import { abi } from '../logic/abi';
+import { tokenAddress, contractAddress } from '../logic/addresses';
+import { ContractWrapper } from '../logic/contract-wrapper';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BlockchainService {
+  connectionStatusChange = new Subject<boolean>();
+
+  private isConnectedToBlockchain = false;
+
   private mmascaraInstance: MetaMascara | null;
 
-constructor(){
-  this.mmascaraInstance = null;
-}
+  constructor() {
+    this.mmascaraInstance = null;
+  }
 
-get tokenAddress(){
-  return this.tokenAddress;
-}
+  get tokenAddress() {
+    return tokenAddress;
+  }
 
-get contractAddress(){
-  return this.contractAddress;
-}
+  get contractAddress() {
+    return contractAddress;
+  }
 
-  get mmascara() : MetaMascara {
+  private get contractAbi() {
+    return abi;
+  }
+
+  get mmascara(): MetaMascara {
     if (!this.mmascaraInstance) {
-    const instance = MetaMascaraFactory.newInstance((window as any).detectEthereumProvider);
-    this.mmascaraInstance = instance;
+      const instance = MetaMascaraFactory.newInstance((window as any).detectEthereumProvider);
+      this.mmascaraInstance = instance;
     }
 
     return this.mmascaraInstance;
-   }
+  }
+
+  async connect() {
+    const result = await this.mmascara.connect();
+    if (this.isConnectedToBlockchain !== result) {
+      this.isConnectedToBlockchain = result;
+      this.connectionStatusChange.next(result);
+    }
+    return result;
+  }
+
+  getContract(): IContract {
+    const contract = this.mmascara.getContract(this.contractAddress, this.contractAbi);
+    return new ContractWrapper(contract);
+  }
 }

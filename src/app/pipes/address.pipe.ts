@@ -1,21 +1,16 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ConnectButtonComponent } from './connect-button/connect-button.component';
-import { PipesModule } from '../pipes/pipes.module';
-import { InteractionareaComponent } from './interactionarea/interactionarea.component';
+import { Pipe, PipeTransform } from '@angular/core';
 
-@NgModule({
-  declarations: [
-    ConnectButtonComponent,
-    InteractionareaComponent,
-  ],
-  imports: [
-    CommonModule,
-    PipesModule,
-  ],
-  exports: [
-    ConnectButtonComponent,
-    InteractionareaComponent,
-  ]
+@Pipe({
+  name: 'address'
 })
-export class ComponentsModule { }
+export class AddressPipe implements PipeTransform {
+  transform(value: string): string {
+    if(!value) {
+      return "";
+    }
+
+    // 0x123...123
+
+    return value.substring(0, 5) + "..." + value.substring(value.length - 3);
+  }
+}
